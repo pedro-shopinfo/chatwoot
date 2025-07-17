@@ -23,31 +23,32 @@ class WebhookListener < BaseListener
   end
 
   def message_created(event)
-    puts "[WebhookListener] message_created called with event: #{event.inspect}"
-  
+    Rails.logger.info "[WebhookListener] message_created called with event: #{event.inspect}"
+    
     message = extract_message_and_account(event)[0]
     inbox = message.inbox
-  
-    puts "[WebhookListener] Full message object: #{message.inspect}"
-    puts "[WebhookListener] Sender: #{message.sender.inspect}"
-    puts "[WebhookListener] Sender type: #{message.sender&.type}"
-  
+    
+    Rails.logger.info "[WebhookListener] Full message object: #{message.inspect}"
+    Rails.logger.info "[WebhookListener] Sender: #{message.sender.inspect}"
+    Rails.logger.info "[WebhookListener] Sender type: #{message.sender&.type}"
+    
     unless message.webhook_sendable?
-      puts "[WebhookListener] Skipping webhook: message #{message.id} not sendable"
+      Rails.logger.info "[WebhookListener] Skipping webhook: message #{message.id} not sendable"
       return
     end
-  
+    
     sender_type = message.sender&.type.to_s.downcase
     unless sender_type == 'contact'
-      puts "[WebhookListener] Skipping webhook: sender type is '#{sender_type}', not 'contact'"
+      Rails.logger.info "[WebhookListener] Skipping webhook: sender type is '#{sender_type}', not 'contact'"
       return
     end
-  
+    
     payload = message.webhook_data.merge(event: __method__.to_s)
-    puts "[WebhookListener] Payload to send: #{payload.inspect}"
-  
+    Rails.logger.info "[WebhookListener] Payload to send: #{payload.inspect}"
+    
     deliver_webhook_payloads(payload, inbox)
   end
+
 
   def message_updated(event)
     message = extract_message_and_account(event)[0]
