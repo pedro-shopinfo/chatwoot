@@ -23,15 +23,29 @@ class WebhookListener < BaseListener
   end
 
   def message_created(event)
+    puts "[WebhookListener] message_created called with event: #{event.inspect}"
+  
     message = extract_message_and_account(event)[0]
     inbox = message.inbox
   
-    return unless message.webhook_sendable?
+    puts "[WebhookListener] Full message object: #{message.inspect}"
+    puts "[WebhookListener] Sender: #{message.sender.inspect}"
+    puts "[WebhookListener] Sender type: #{message.sender&.type}"
   
-    # 🔒 Filtro para só disparar se sender.type == 'contact'
-    return unless message.sender&.type.to_s.downcase == 'contact'
+    unless message.webhook_sendable?
+      puts "[WebhookListener] Skipping webhook: message #{message.id} not sendable"
+      return
+    end
+  
+    sender_type = message.sender&.type.to_s.downcase
+    unless sender_type == 'contact'
+      puts "[WebhookListener] Skipping webhook: sender type is '#{sender_type}', not 'contact'"
+      return
+    end
   
     payload = message.webhook_data.merge(event: __method__.to_s)
+    puts "[WebhookListener] Payload to send: #{payload.inspect}"
+  
     deliver_webhook_payloads(payload, inbox)
   end
 
