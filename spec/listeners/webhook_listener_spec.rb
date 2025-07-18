@@ -21,6 +21,7 @@ describe WebhookListener do
     context 'when webhook is not configured' do
       it 'does not trigger webhook' do
         expect(WebhookJob).to receive(:perform_later).exactly(0).times
+        Rails.logger.info "[WebhookListener!] message_created called"
         listener.message_created(message_created_event)
       end
     end
